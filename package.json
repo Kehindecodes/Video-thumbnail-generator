@@ -1,0 +1,32 @@
+{
+  "name": "video-thumbnail-generator",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prebuild": "mkdir -p dist/@types && cp -R node_modules/@types/. dist/@types/",
+    "build": "tsc --build",
+    "dev": "nodemon --exec ts-node src/server.ts",
+    "worker": "nodemon --exec ts-node src/workQueue/worker.ts"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.697.0",
+    "@types/multer": "^1.4.12",
+    "amqplib": "^0.10.4",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "mongoose": "^8.8.1",
+    "multer": "^1.4.5-lts.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.3"
+  },
+  "devDependencies": {
+    "@types/amqplib": "^0.10.5",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.9.0",
+    "nodemon": "^3.1.7"
+  }
+}
