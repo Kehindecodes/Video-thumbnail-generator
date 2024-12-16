@@ -1,42 +1,59 @@
-import { randomUUID } from "crypto";
+import { v4 as uuidv4 } from 'uuid'
 import { Document, Schema, model } from "mongoose";
 
-interface IVideo extends Document {
-    id: string;
-    title: string;
-    description: string;
-    filePath: string;
-    thumbnailPath: string;
-    size: number;
-    format: string;
-    uploadTime: Date;
-    processsingDetails: Object;
-    status: Status;
-    updatedAt: Date;
+export interface IVideo extends Document {
+  title: string;
+  description: string;
+  filePath: string;
+  thumbnailPath: string;
+  size: number;
+  format: string;
+  uploadTime: Date;
+  processsingDetails: {
+    startedAt: Date;
+    finishedAt: Date;
+  };
+  processingTime: string;
+  status: Status;
+  uploadedAt: Date;
 }
 
-enum Status {
-    UPLOADED = "UPLOADED",
-    PROCESSING = "PROCESSING",
-    GENERATED = "GENERATED",
-    FAILED = "FAILED",
+export enum Status {
+  UPLOADED = "UPLOADED",
+  PROCESSING = "PROCESSING",
+  GENERATED = "GENERATED",
+  FAILED = "FAILED",
 }
 
-const VideoSchema = new Schema({
-    id: { type: String, required: true, unique: true, default: randomUUID() },
+const VideoSchema = new Schema(
+  {
+    _id: {
+      type: String,
+      default: () => uuidv4(),
+      required: true,
+    },
     title: { type: String, required: true },
     description: { type: String, required: true },
     filePath: { type: String, required: true },
     thumbnailPath: { type: String },
     size: { type: Number, required: true },
     format: { type: String, required: true },
-    uploadTime: { type: Date, required: true },
+    uploadTime: { type: String, required: true },
     processsingDetails: {
-        startedAt: { type: Date, required: true },
-        completedAt: { type: Date },
+      startedAt: { type: Date, default: null },
+      finishedAt: { type: Date, default: null },
     },
-    status: { type: String, required: true },
-    updatedAt: { type: Date, required: true },
-});
+    processingTime:{ type:String, default: null },
+    status: {
+      type: String,
+      enum: Object.values(Status),
+      required: true,
+    },
+    uploadedAt: { type: Date, required: true },
+  },
+  {
+    timestamps: true,
+  }
+);
 
 export const Video = model<IVideo>("Video", VideoSchema);

@@ -1,12 +1,14 @@
-import e, { Request, Response } from "express";
+import { Request, Response } from "express";
 import { uploadToS3 } from "../config/aws";
-import { Video } from "../model/Video";
+import { Video, Status } from "../model/Video";
 import { sendMessageToQueue } from "../workQueue/messageQueue";
+import { v4 as uuidv4 } from 'uuid';
 
+const allowedFormats = ['video/mp4', 'video/webm', 'video/ogg', 'video/mkv'];
 
- const allowedFormats = ['video/mp4', 'video/webm', 'video/ogg', 'video/mkv'];
 export const handleSingleUpload = async (req: Request, res: Response) : Promise<any>  => {
     try {
+        const uploadStartTime = new Date();
         if (!req.file) {
             return res.status(400).json({ error: 'No file uploaded' });
         }
@@ -16,23 +18,33 @@ export const handleSingleUpload = async (req: Request, res: Response) : Promise<
         }
 
         const s3Location = await uploadToS3(req.file);
+        const uploadEndTime = new Date();
+
+        // Calculate upload duration in seconds
+        const uploadDurationInSeconds = (uploadEndTime.getTime() - uploadStartTime.getTime()) / 1000;
 
         // Create video document in MongoDB
         const video = new Video({
+            _id: uuidv4(),
             title: req.body.title || req.file.originalname,
             description: req.body.description || '',
             filePath: s3Location,
             size: req.file.size,
             format: req.file.mimetype,
-            uploadTime: new Date(),
-            status: 'UPLOADED',
-            processsingDetails: {},
+            uploadTime: `${uploadDurationInSeconds.toFixed(2)} seconds`,
+            status: Status.UPLOADED,
+            processsingDetails: {
+                startedAt: null,
+                finishedAt: null
+            },
+            uploadedAt: uploadEndTime
         });
+
+        console.log("Generated ID:", video._id);
 
         await video.save();
 
-        // Send message to queue for processing
-        sendMessageToQueue(JSON.stringify({ videoId: video.id }));
+        sendMessageToQueue(video);
 
         res.status(201).json({
             message: 'Video uploaded successfully',
